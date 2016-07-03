@@ -13,7 +13,7 @@ ESP8266 is a tiny MCU module with WIFI. It already contains a virtual modem firm
 
 This was originally modified for use on the Commodore 64. The easiest device to use in the Sparkfun ESP8266 WiFi Shield. Originally designed for use with an Arduino, it already contains the 3.3v <-> 5v level shifters needed on TX and RX but also the 3.3v voltage regulator.
 
-Additional features added include storing settings in NVRAM, managing active settings and stored settings, speed dial management, auto answer capabilities, automatic busy messages when in use for incoming connections, hardware flow control support, support for Commodore PET MCTerm (by Madison Computer) bit 8 ASCII translation), time in call on disconnect.
+Additional features added include storing settings in NVRAM, managing active settings and stored settings, speed dial management, auto answer capabilities, automatic busy messages when in use for incoming connections, hardware flow control support, support for Commodore PET MCTerm (by Madison Computer) bit 8 ASCII translation, time in call on disconnect, web server on port 80 supporting mDNS.
 
 AT command examples
 -------------------
