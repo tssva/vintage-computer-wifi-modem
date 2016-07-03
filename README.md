@@ -11,7 +11,7 @@ Overview
 
 ESP8266 is a tiny MCU module with WIFI. It already contains a virtual modem firmware by factory but I wanted to make one myself to support a wider range of baud rates. For example Commodore 64 requires 2400 or lower. Now it is also possible to add additional features in the future because this is open source. For example, translation tables for different character sets or file transfer protocol conversions on the fly with help of a buffer in MCU memory.
 
-This was originally modified for use on the Commodore 64. The easiest device to use in the Sparkfun ESP8266 WiFi Shield. Originally designed for use with an Arduino, it already contains the 3.3v <-> 5v level shifters needed on TX and RX but also the 3.3v voltage regulator.
+This was originally modified for use on the Commodore 64. The easiest device to use in the Sparkfun ESP8266 WiFi Shield. Originally designed for use with an Arduino, it already contains the 3.3v <-> 5v level shifters needed on TX and RX but also the 3.3v voltage regulator. https://www.sparkfun.com/products/13287
 
 Additional features added include storing settings in NVRAM, managing active settings and stored settings, speed dial management, auto answer capabilities, automatic busy messages when in use for incoming connections, hardware flow control support, support for Commodore PET MCTerm (by Madison Computer) bit 8 ASCII translation, time in call on disconnect, web server on port 80 supporting mDNS.
 
