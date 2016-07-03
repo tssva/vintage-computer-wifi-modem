@@ -42,24 +42,24 @@ You can always default the baud rate back to 300 baud by pressing and holding th
 Example communication
 ---------------------
 
-OK
-at$ssid=MyWiFiNetwork
+  OK
+  at$ssid=MyWiFiNetwork
 
-OK
-at$pass=MyPassword
+  OK
+  at$pass=MyPassword
 
-OK
-atc1
+  OK
+  atc1
 
-CONNECTING TO SSID MyWiFiNetwork......
-CONNECTED TO MyWiFiNetwork
-IP ADDRESS: 192.168.2.3
+  CONNECTING TO SSID MyWiFiNetwork......
+  CONNECTED TO MyWiFiNetwork
+  IP ADDRESS: 192.168.2.3
 
-OK
-atdtbat.org:23
-DIALING bat.org:23
+  OK
+  atdtbat.org:23
+  DIALING bat.org:23
 
-CONNECT 2400
+  CONNECT 2400
 
 
                ^_                                   _^
