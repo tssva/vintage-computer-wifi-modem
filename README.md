@@ -49,14 +49,13 @@ OK
 at$pass=MyPassword
 
 OK
-atdtbat,.
-DIALING bat,.:23
+atc1
 
-NO ANSWER
-atdtbat.o
-DIALING bat.o:23
+CONNECTING TO SSID MyWiFiNetwork......
+CONNECTED TO MyWiFiNetwork
+IP ADDRESS: 192.168.2.3
 
-NO ANSWER
+OK
 atdtbat.org:23
 DIALING bat.org:23
 
