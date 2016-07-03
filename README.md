@@ -41,27 +41,27 @@ You can always default the baud rate back to 300 baud by pressing and holding th
 
 Example communication
 ---------------------
-
-  OK
-  at$ssid=MyWiFiNetwork
-
-  OK
-  at$pass=MyPassword
-
-  OK
-  atc1
-
-  CONNECTING TO SSID MyWiFiNetwork......
-  CONNECTED TO MyWiFiNetwork
-  IP ADDRESS: 192.168.2.3
-
-  OK
-  atdtbat.org:23
-  DIALING bat.org:23
-
-  CONNECT 2400
-
-
+    
+    OK
+    at$ssid=MyWiFiNetwork
+    
+    OK
+    at$pass=MyPassword
+    
+    OK
+    atc1
+    
+    CONNECTING TO SSID MyWiFiNetwork......
+    CONNECTED TO MyWiFiNetwork
+    IP ADDRESS: 192.168.2.3
+    
+    OK
+    atdtbat.org:23
+    DIALING bat.org:23
+    
+    CONNECT 2400
+    
+    
                ^_                                   _^
               /  \__________   /\___/\   __________/  \
              /              \  \     /  /              \
@@ -71,9 +71,9 @@ Example communication
          / _/      \          _       _          /      \_ \
         /_/         \/\/\/\/\/ \_____/ \/\/\/\/\/         \_\
        //                                                   \\
-.       Welcome to BatMUD, Online since 14th April 1990!
-.     EMail: batry@bat.org about problems concerning BatMUD
-
+    .       Welcome to BatMUD, Online since 14th April 1990!
+    .     EMail: batry@bat.org about problems concerning BatMUD
+    
          This machine is owned by B.A.T. ry, a non-profit organization, 
                         and is hosted at Nebula, Finland.
 
