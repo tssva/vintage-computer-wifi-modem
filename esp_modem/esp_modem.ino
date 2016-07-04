@@ -91,6 +91,7 @@ static unsigned char ascToPetTable[256] = {
 #define VERBOSE_ADDRESS 117
 #define PET_TRANSLATE_ADDRESS 118
 #define FLOW_CONTROL_ADDRESS 119
+#define PIN_POLARITY_ADDRESS 120
 #define DIAL0_ADDRESS   200
 #define DIAL1_ADDRESS   250
 #define DIAL2_ADDRESS   300
@@ -150,6 +151,8 @@ bool hex = false;
 enum flowControl_t { F_NONE, F_HARDWARE, F_SOFTWARE };
 byte flowControl = F_NONE;      // Use flow control
 bool txPaused = false;          // Has flow control asked us to pause?
+enum pinPolarity_t { P_INVERTED, P_NORMAL }; // Is LOW (0) or HIGH (1) active?
+byte pinPolarity = P_INVERTED;
 
 // Telnet codes
 #define DO 0xfd
@@ -193,6 +196,7 @@ void writeSettings() {
   EEPROM.write(VERBOSE_ADDRESS, byte(verboseResults));
   EEPROM.write(PET_TRANSLATE_ADDRESS, byte(petTranslate));
   EEPROM.write(FLOW_CONTROL_ADDRESS, byte(flowControl));
+  EEPROM.write(PIN_POLARITY_ADDRESS, byte(pinPolarity));
 
   for (int i = 0; i < 10; i++) {
     setEEPROM(speedDials[i], speedDialAddresses[i], 50);
@@ -213,6 +217,7 @@ void readSettings() {
   verboseResults = EEPROM.read(VERBOSE_ADDRESS);
   petTranslate = EEPROM.read(PET_TRANSLATE_ADDRESS);
   flowControl = EEPROM.read(FLOW_CONTROL_ADDRESS);
+  pinPolarity = EEPROM.read(PIN_POLARITY_ADDRESS);
 
   for (int i = 0; i < 10; i++) {
     speedDials[i] = getEEPROM(speedDialAddresses[i], 50);
@@ -236,6 +241,7 @@ void defaultEEPROM() {
   EEPROM.write(VERBOSE_ADDRESS, 0x01);
   EEPROM.write(PET_TRANSLATE_ADDRESS, 0x00);
   EEPROM.write(FLOW_CONTROL_ADDRESS, 0x00);
+  EEPROM.write(PIN_POLARITY_ADDRESS, 0x01);
 
   setEEPROM("bbs.fozztexx.com:23", speedDialAddresses[0], 50);
   setEEPROM("cottonwoodbbs.dyndns.org:6502", speedDialAddresses[1], 50);
@@ -348,6 +354,7 @@ void connectWiFi() {
   Serial.println();
   if (i == 21) {
     Serial.print("COULD NOT CONNET TO "); Serial.println(ssid);
+    WiFi.disconnect();
     updateLed();
   } else {
     Serial.print("CONNECTED TO "); Serial.println(WiFi.SSID());
@@ -370,6 +377,10 @@ void disconnectWiFi() {
 }
 
 void setBaudRate(int inSpeed) {
+  if (inSpeed == 0) {
+    sendResult(R_ERROR);
+    return;
+  }
   int foundBaud = -1;
   for (int i = 0; i < sizeof(bauds); i++) {
     if (inSpeed == bauds[i]) {
@@ -382,8 +393,8 @@ void setBaudRate(int inSpeed) {
     sendResult(R_ERROR);
     return;
   }
-  if (inSpeed == 0) {
-    sendResult(R_ERROR);
+  if (foundBaud == serialspeed) {
+    sendResult(R_OK);
     return;
   }
   Serial.print("SWITCHING SERIAL PORT TO ");
@@ -398,7 +409,8 @@ void setBaudRate(int inSpeed) {
   sendResult(R_OK);
 }
 
-void setCarrier(int carrier) {
+void setCarrier(byte carrier) {
+  if (pinPolarity == P_NORMAL) carrier = !carrier;
   digitalWrite(DCD_PIN, carrier);
 }
 
@@ -491,6 +503,7 @@ void displayCurrentSettings() {
   Serial.print("E"); Serial.print(echo); Serial.print(" "); yield();
   Serial.print("V"); Serial.print(verboseResults); Serial.print(" "); yield();
   Serial.print("&K"); Serial.print(flowControl); Serial.print(" "); yield();
+  Serial.print("&P"); Serial.print(pinPolarity); Serial.print(" "); yield();
   Serial.print("NET"); Serial.print(telnet); Serial.print(" "); yield();
   Serial.print("PET"); Serial.print(petTranslate); Serial.print(" "); yield();
   Serial.print("S0:"); Serial.print(autoAnswer); Serial.print(" "); yield();
@@ -514,6 +527,7 @@ void displayStoredSettings() {
   Serial.print("E"); Serial.print(EEPROM.read(ECHO_ADDRESS)); Serial.print(" "); yield();
   Serial.print("V"); Serial.print(EEPROM.read(VERBOSE_ADDRESS)); Serial.print(" "); yield();
   Serial.print("&K"); Serial.print(EEPROM.read(FLOW_CONTROL_ADDRESS)); Serial.print(" "); yield();
+  Serial.print("&P"); Serial.print(EEPROM.read(PIN_POLARITY_ADDRESS)); Serial.print(" "); yield();
   Serial.print("NET"); Serial.print(EEPROM.read(TELNET_ADDRESS)); Serial.print(" "); yield();
   Serial.print("PET"); Serial.print(EEPROM.read(PET_TRANSLATE_ADDRESS)); Serial.print(" "); yield();
   Serial.print("S0:"); Serial.print(EEPROM.read(AUTO_ANSWER_ADDRESS)); Serial.print(" "); yield();
@@ -558,14 +572,15 @@ void displayHelp() {
   Serial.println("SAVE TO NVRAM.: AT&W"); yield();
   Serial.println("SHOW SETTINGS.: AT&V"); yield();
   Serial.println("FACT. DEFAULTS: AT&F"); yield();
+  Serial.println("PIN POLARITY..: AT&PN (N=0/INV,1/NORM)"); yield();
   Serial.println("ECHO OFF/ON...: ATE0 / ATE1"); yield();
   Serial.println("VERBOSE OFF/ON: ATV0 / ATV1"); yield();
   Serial.println("SET SSID......: AT$SSID=WIFISSID"); yield();
   Serial.println("SET PASSWORD..: AT$PASS=WIFIPASSWORD"); yield();
   Serial.println("SET BAUD RATE.: AT$SB=N (3,12,24,48,96"); yield();
   Serial.println("                192,384,576,1152)*100"); yield();
-  Serial.println("FLOW CONTROL..: AT&KN (N=0/N,1/HW,2/SW)"); yield();
   waitForSpace();
+  Serial.println("FLOW CONTROL..: AT&KN (N=0/N,1/HW,2/SW)"); yield();
   Serial.println("WIFI OFF/ON...: ATC0 / ATC1"); yield();
   Serial.println("HANGUP........: ATH"); yield();
   Serial.println("ENTER CMD MODE: +++"); yield();
@@ -962,6 +977,27 @@ void command()
     }
   }
 
+  /**** Control pin polarity of CTS, RTS, DCD ****/
+  else if (upCmd.indexOf("AT&P") == 0) {
+    if (upCmd.substring(4, 5) == "?") {
+      sendString(String(pinPolarity));
+      sendResult(R_OK);
+    }
+    else if (upCmd.substring(4, 5) == "0") {
+      pinPolarity = P_INVERTED;
+      sendResult(R_OK);
+      setCarrier(callConnected);
+    }
+    else if (upCmd.substring(4, 5) == "1") {
+      pinPolarity = P_NORMAL;
+      sendResult(R_OK);
+      setCarrier(callConnected);
+    }
+    else {
+      sendResult(R_ERROR);
+    }
+  }
+
   /**** Control Flow Control ****/
   else if (upCmd.indexOf("AT&K") == 0) {
     if (upCmd.substring(4, 5) == "?") {
@@ -1239,7 +1275,7 @@ void command()
 void handleFlowControl() {
   if (flowControl == F_NONE) return;
   if (flowControl == F_HARDWARE) {
-    if (digitalRead(CTS_PIN) == HIGH) txPaused = true;
+    if (digitalRead(CTS_PIN) == pinPolarity) txPaused = true;
     else txPaused = false;
   }
   if (flowControl == F_SOFTWARE) {
@@ -1452,3 +1488,4 @@ void loop()
   // Turn off tx/rx led if it has been lit long enough to be visible
   if (millis() - ledTime > LED_TIME) digitalWrite(LED_PIN, !digitalRead(LED_PIN)); // toggle LED state
 }
+
