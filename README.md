@@ -15,6 +15,22 @@ This was originally modified for use on the Commodore 64. The easiest device to 
 
 Additional features added include storing settings in NVRAM, managing active settings and stored settings, speed dial management, auto answer capabilities, automatic busy messages when in use for incoming connections, hardware flow control support, support for Commodore PET MCTerm (by Madison Computer) bit 8 ASCII translation, time in call on disconnect, web server on port 80 supporting mDNS.
 
+Wiring
+------
+
+Connect the SparkFun ESP8266 WiFi Shield as follows to your C64.
+
+* ESP8266 HW_RX pin to C64 TX User port pin M
+* ESP8266 HW_TX pin to C64 RX User port pins B & C
+* ESP8266 5V pin to C64 +5v User port pin 2
+* ESP8266 GND pin to C64 GND User port pin A & N
+
+Additionally, one wire jumper on the ESP8266 shield:
+
+* ESP8266 RST pin to ESP8266 GPIO pin 0
+
+Slide the UART switch to "HW".
+
 AT command examples
 -------------------
 
