@@ -73,7 +73,7 @@ static unsigned char ascToPetTable[256] = {
 #define VERSIONA 0
 #define VERSIONB 1
 #define VERSION_ADDRESS 0    // EEPROM address
-#define VERSION_LEN     2    // Length in bytes
+#define VERSION_LEN     2    // Length in bytesF
 #define SSID_ADDRESS    2
 #define SSID_LEN        32
 #define PASS_ADDRESS    34
@@ -107,10 +107,10 @@ static unsigned char ascToPetTable[256] = {
 #define LAST_ADDRESS    780
 
 #define SWITCH_PIN 0       // GPIO0 (programmind mode pin)
-#define LED_PIN 5          // Status LED
+#define LED_PIN 12          // Status LED
 #define DCD_PIN 2          // DCD Carrier Status
-#define RTS_PIN 13         // RTS Request to Send, connect to host's CTS pin
-#define CTS_PIN 12         // CTS Clear to Send, connect to host's RTS pin
+#define RTS_PIN 4         // RTS Request to Send, connect to host's CTS pin
+#define CTS_PIN 5         // CTS Clear to Send, connect to host's RTS pin
 
 // Global variables
 String build = "20160621182048";
@@ -121,7 +121,7 @@ bool telnet = false;       // Is telnet control code handling enabled
 bool verboseResults = false;
 //#define DEBUG 1          // Print additional debug information to serial channel
 #undef DEBUG
-#define LISTEN_PORT 6400   // Listen to this if not connected. Set to zero to disable.
+#define LISTEN_PORT 23   // Listen to this if not connected. Set to zero to disable.
 int tcpServerPort = LISTEN_PORT;
 #define RING_INTERVAL 3000 // How often to print RING when having a new incoming connection (ms)
 unsigned long lastRingMs = 0; // Time of last "RING" message (millis())
@@ -149,10 +149,10 @@ unsigned long connectTime = 0;
 bool petTranslate = false; // Fix PET MCTerm 1.26C Pet->ASCII encoding to actual ASCII
 bool hex = false;
 enum flowControl_t { F_NONE, F_HARDWARE, F_SOFTWARE };
-byte flowControl = F_NONE;      // Use flow control
+byte flowControl = F_SOFTWARE;      // Use flow control
 bool txPaused = false;          // Has flow control asked us to pause?
 enum pinPolarity_t { P_INVERTED, P_NORMAL }; // Is LOW (0) or HIGH (1) active?
-byte pinPolarity = P_INVERTED;
+byte pinPolarity = P_NORMAL;
 
 // Telnet codes
 #define DO 0xfd
@@ -240,13 +240,13 @@ void defaultEEPROM() {
   EEPROM.write(TELNET_ADDRESS, 0x00);
   EEPROM.write(VERBOSE_ADDRESS, 0x01);
   EEPROM.write(PET_TRANSLATE_ADDRESS, 0x00);
-  EEPROM.write(FLOW_CONTROL_ADDRESS, 0x00);
+  EEPROM.write(FLOW_CONTROL_ADDRESS, 0x02);
   EEPROM.write(PIN_POLARITY_ADDRESS, 0x01);
 
-  setEEPROM("bbs.fozztexx.com:23", speedDialAddresses[0], 50);
-  setEEPROM("cottonwoodbbs.dyndns.org:6502", speedDialAddresses[1], 50);
-  setEEPROM("borderlinebbs.dyndns.org:6400", speedDialAddresses[2], 50);
-  setEEPROM("particlesbbs.dyndns.org:6400", speedDialAddresses[3], 50);
+  setEEPROM("theoldnet.com:23", speedDialAddresses[0], 50);
+  setEEPROM("bbs.eotd.com:23", speedDialAddresses[1], 50);
+  setEEPROM("blackflag.acid.org:31337", speedDialAddresses[2], 50);
+  setEEPROM("bbs.starbase21.net:23", speedDialAddresses[3], 50);
   setEEPROM("reflections.servebbs.com:23", speedDialAddresses[4], 50);
   setEEPROM("heatwavebbs.com:9640", speedDialAddresses[5], 50);
 
@@ -314,6 +314,7 @@ void sendString(String msg) {
 int checkButton() {
   long time = millis();
   while (digitalRead(SWITCH_PIN) == LOW && millis() - time < 5000) {
+    Serial.print("Reset To 300 BPS button pressed");
     delay(250);
     digitalWrite(LED_PIN, !digitalRead(LED_PIN));
     yield();
@@ -596,8 +597,11 @@ void storeSpeedDial(byte num, String location) {
 
 void welcome() {
   Serial.println();
-  Serial.println("WIFI SIXFOUR BUILD " + build + " BY @PAULRICKARDS");
-  Serial.println("BASED ON GITHUB.COM/JSALIN/ESP8266_MODEM");
+  Serial.println("TheOldNet.com");
+  Serial.println("SERIAL WIFI MODEM EMULATOR");
+  Serial.println("BUILD " + build + "");
+  Serial.println("GPL3 GITHUB.COM/SSSHAKE/ESP8266_MODEM");
+  Serial.println();
 }
 
 /**
@@ -610,7 +614,7 @@ void setup() {
   digitalWrite(SWITCH_PIN, HIGH);
   pinMode(DCD_PIN, OUTPUT);
   pinMode(RTS_PIN, OUTPUT);
-  digitalWrite(RTS_PIN, LOW); // ready to receive data
+  digitalWrite(RTS_PIN, HIGH); // ready to receive data
   pinMode(CTS_PIN, INPUT);
   //digitalWrite(CTS_PIN, HIGH); // pull up
   setCarrier(false);
