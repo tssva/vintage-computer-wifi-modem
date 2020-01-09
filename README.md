@@ -1,6 +1,9 @@
 Virtual modem for ESP8266
 =========================
 
+Copyright (C) 2020 Richard Bettridge under GPLv3 license.
+
+based on https://github.com/RolandJuno/esp8266_modem
 Copyright (C) 2016 Paul Rickards <rickards@gmail.com> under GPLv3 license.
 
 based on https://github.com/jsalin/esp8266_modem
