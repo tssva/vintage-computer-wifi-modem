@@ -321,7 +321,7 @@ int checkButton() {
     yield();
   }
   if (millis() - time > 5000) {
-    Serial.print("\r\n Resetting to 300 BPS Now");
+    Serial.print("\r\nResetting to 300 BPS Now");
     Serial.flush();
     Serial.end();
     serialspeed = 0;
