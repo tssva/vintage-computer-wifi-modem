@@ -107,7 +107,7 @@ static unsigned char ascToPetTable[256] = {
 #define LAST_ADDRESS    780
 
 #define SWITCH_PIN 0       // GPIO0 (programmind mode pin)
-#define LED_PIN 12          // Status LED
+#define LED_PIN 16          // Status LED
 #define DCD_PIN 2          // DCD Carrier Status
 #define RTS_PIN 4         // RTS Request to Send, connect to host's CTS pin
 #define CTS_PIN 5         // CTS Clear to Send, connect to host's RTS pin
@@ -314,12 +314,14 @@ void sendString(String msg) {
 int checkButton() {
   long time = millis();
   while (digitalRead(SWITCH_PIN) == LOW && millis() - time < 5000) {
-    Serial.print("Reset To 300 BPS button pressed");
+    long remaining = millis() - time;
+    //Serial.print("\r\n Reset To 300 BPS In " + String(remaining) + "");
     delay(250);
     digitalWrite(LED_PIN, !digitalRead(LED_PIN));
     yield();
   }
   if (millis() - time > 5000) {
+    Serial.print("\r\n Resetting to 300 BPS Now");
     Serial.flush();
     Serial.end();
     serialspeed = 0;
