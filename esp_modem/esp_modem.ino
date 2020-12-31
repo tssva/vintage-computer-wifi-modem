@@ -113,12 +113,12 @@ static unsigned char ascToPetTable[256] = {
 #define CTS_PIN 5         // CTS Clear to Send, connect to host's RTS pin
 
 // Global variables
-String build = "01102020";
+String build = "12312020";
 String cmd = "";           // Gather a new AT command to this string from serial
 bool cmdMode = true;       // Are we in AT command mode or connected mode
 bool callConnected = false;// Are we currently in a call
 bool telnet = false;       // Is telnet control code handling enabled
-bool verboseResults = false;
+int verboseResults = 0;
 //#define DEBUG 1          // Print additional debug information to serial channel
 #undef DEBUG
 #define LISTEN_PORT 23   // Listen to this if not connected. Set to zero to disable.
@@ -288,6 +288,9 @@ void setEEPROM(String inString, int startAddress, int maxLen) {
 
 void sendResult(int resultCode) {
   Serial.print("\r\n");
+  if (verboseResults == 2) {
+    return;
+  }
   if (verboseResults == 0) {
     Serial.println(resultCode);
     return;
@@ -561,23 +564,23 @@ void waitForSpace() {
 void displayHelp() {
   welcome();
   Serial.println("AT COMMAND SUMMARY:"); yield();
-  Serial.println("DIAL HOST.....: ATDTHOST:PORT"); yield();
-  Serial.println("SPEED DIAL....: ATDSN (N=0-9)"); yield();
-  Serial.println("SET SPEED DIAL: AT&ZN=HOST:PORT (N=0-9)"); yield();
-  Serial.println("HANDLE TELNET.: ATNETN (N=0,1)"); yield();
-  Serial.println("PET MCTERM TR.: ATPETN (N=0,1)"); yield();
-  Serial.println("NETWORK INFO..: ATI"); yield();
-  Serial.println("HTTP GET......: ATGET<URL>"); yield();
-  //Serial.println("SERVER PORT...: AT$SP=N (N=1-65535)"); yield();
-  Serial.println("AUTO ANSWER...: ATS0=N (N=0,1)"); yield();
-  Serial.println("SET BUSY MSG..: AT$BM=YOUR BUSY MESSAGE"); yield();
-  Serial.println("LOAD NVRAM....: ATZ"); yield();
-  Serial.println("SAVE TO NVRAM.: AT&W"); yield();
-  Serial.println("SHOW SETTINGS.: AT&V"); yield();
-  Serial.println("FACT. DEFAULTS: AT&F"); yield();
-  Serial.println("PIN POLARITY..: AT&PN (N=0/INV,1/NORM)"); yield();
-  Serial.println("ECHO OFF/ON...: ATE0 / ATE1"); yield();
-  Serial.println("VERBOSE OFF/ON: ATV0 / ATV1"); yield();
+  Serial.println("DIAL HOST............: ATDTHOST:PORT"); yield();
+  Serial.println("SPEED DIAL...........: ATDSN (N=0-9)"); yield();
+  Serial.println("SET SPEED DIAL.......: AT&ZN=HOST:PORT (N=0-9)"); yield();
+  Serial.println("HANDLE TELNET........: ATNETN (N=0,1)"); yield();
+  Serial.println("PET MCTERM TR........: ATPETN (N=0,1)"); yield();
+  Serial.println("NETWORK INFO.........: ATI"); yield();
+  Serial.println("HTTP GET.............: ATGET<URL>"); yield();
+  //Serial.println("SERVER PORT........: AT$SP=N (N=1-65535)"); yield();
+  Serial.println("AUTO ANSWER..........: ATS0=N (N=0,1)"); yield();
+  Serial.println("SET BUSY MSG.........: AT$BM=YOUR BUSY MESSAGE"); yield();
+  Serial.println("LOAD NVRAM...........: ATZ"); yield();
+  Serial.println("SAVE TO NVRAM........: AT&W"); yield();
+  Serial.println("SHOW SETTINGS........: AT&V"); yield();
+  Serial.println("FACT. DEFAULTS.......: AT&F"); yield();
+  Serial.println("PIN POLARITY.........: AT&PN (N=0/INV,1/NORM)"); yield();
+  Serial.println("ECHO OFF/ON..........: ATE0 / ATE1"); yield();
+  Serial.println("VERBOSE OFF/ON/SILENT: ATV0 / ATV1 / ATV2"); yield();
   Serial.println("SET SSID......: AT$SSID=WIFISSID"); yield();
   Serial.println("SET PASSWORD..: AT$PASS=WIFIPASSWORD"); yield();
   Serial.println("SET BAUD RATE.: AT$SB=N (3,12,24,48,96"); yield();
@@ -602,7 +605,7 @@ void welcome() {
   Serial.println("TheOldNet.com");
   Serial.println("SERIAL WIFI MODEM EMULATOR");
   Serial.println("BUILD " + build + "");
-  Serial.println("GPL3 GITHUB.COM/SSSHAKE/ESP8266_MODEM");
+  Serial.println("GPL3 GITHUB.COM/SSSHAKE/vintage-computer-wifi-modem");
   Serial.println();
 }
 
@@ -806,10 +809,10 @@ void handleIncomingConnection() {
   }
 
   if (autoAnswer == true) {
-    WiFiClient tempClient = tcpServer.available(); // this is the key to keeping the connection open
-    tcpClient = tempClient; // hand over the new connection to the global client
-    tempClient.stop();   // stop the temporary one
-    sendString(String("RING ") + ipToString(tcpClient.remoteIP()));
+    tcpClient = tcpServer.available();
+    if (verboseResults == 1) {
+      sendString(String("RING ") + ipToString(tcpClient.remoteIP()));
+    }
     delay(1000);
     sendResult(R_CONNECT);
     connectTime = millis();
@@ -976,6 +979,10 @@ void command()
     }
     else if (upCmd.substring(3, 4) == "1") {
       verboseResults = 1;
+      sendResult(R_OK);
+    }
+    else if (upCmd.substring(3, 4) == "2") {
+      verboseResults = 2;
       sendResult(R_OK);
     }
     else {
