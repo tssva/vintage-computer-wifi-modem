@@ -1,3 +1,4 @@
+sierra.com
 /*
    WiFi SIXFOUR - A virtual WiFi modem based on the ESP 8266 chipset
    Copyright (C) 2016 Paul Rickards <rickards@gmail.com>
@@ -244,11 +245,12 @@ void defaultEEPROM() {
   EEPROM.write(PIN_POLARITY_ADDRESS, 0x01);
 
   setEEPROM("theoldnet.com:23", speedDialAddresses[0], 50);
-  setEEPROM("bbs.eotd.com:23", speedDialAddresses[1], 50);
-  setEEPROM("blackflag.acid.org:31337", speedDialAddresses[2], 50);
-  setEEPROM("bbs.starbase21.net:23", speedDialAddresses[3], 50);
-  setEEPROM("reflections.servebbs.com:23", speedDialAddresses[4], 50);
-  setEEPROM("heatwavebbs.com:9640", speedDialAddresses[5], 50);
+  setEEPROM("bbs.retrocampus.com:23", speedDialAddresses[1], 50);
+  setEEPROM("bbs.eotd.com:23", speedDialAddresses[2], 50);
+  setEEPROM("blackflag.acid.org:31337", speedDialAddresses[3], 50);
+  setEEPROM("bbs.starbase21.net:23", speedDialAddresses[4], 50);
+  setEEPROM("reflections.servebbs.com:23", speedDialAddresses[5], 50);
+  setEEPROM("heatwavebbs.com:9640", speedDialAddresses[6], 50);
 
   for (int i = 5; i < 10; i++) {
     setEEPROM("", speedDialAddresses[i], 50);
@@ -1501,4 +1503,3 @@ void loop()
   // Turn off tx/rx led if it has been lit long enough to be visible
   if (millis() - ledTime > LED_TIME) digitalWrite(LED_PIN, !digitalRead(LED_PIN)); // toggle LED state
 }
-
