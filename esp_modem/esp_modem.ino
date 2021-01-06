@@ -1,4 +1,3 @@
-sierra.com
 /*
    WiFi SIXFOUR - A virtual WiFi modem based on the ESP 8266 chipset
    Copyright (C) 2016 Paul Rickards <rickards@gmail.com>
