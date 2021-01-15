@@ -118,7 +118,7 @@ String cmd = "";           // Gather a new AT command to this string from serial
 bool cmdMode = true;       // Are we in AT command mode or connected mode
 bool callConnected = false;// Are we currently in a call
 bool telnet = false;       // Is telnet control code handling enabled
-int verboseResults = 0;
+bool verboseResults = false;
 //#define DEBUG 1          // Print additional debug information to serial channel
 #undef DEBUG
 #define LISTEN_PORT 23   // Listen to this if not connected. Set to zero to disable.
@@ -289,9 +289,6 @@ void setEEPROM(String inString, int startAddress, int maxLen) {
 
 void sendResult(int resultCode) {
   Serial.print("\r\n");
-  if (verboseResults == 2) {
-    return;
-  }
   if (verboseResults == 0) {
     Serial.println(resultCode);
     return;
@@ -581,7 +578,7 @@ void displayHelp() {
   Serial.println("FACT. DEFAULTS.......: AT&F"); yield();
   Serial.println("PIN POLARITY.........: AT&PN (N=0/INV,1/NORM)"); yield();
   Serial.println("ECHO OFF/ON..........: ATE0 / ATE1"); yield();
-  Serial.println("VERBOSE OFF/ON/SILENT: ATV0 / ATV1 / ATV2"); yield();
+  Serial.println("VERBOSE OFF/ON.......: ATV0 / ATV1"); yield();
   Serial.println("SET SSID......: AT$SSID=WIFISSID"); yield();
   Serial.println("SET PASSWORD..: AT$PASS=WIFIPASSWORD"); yield();
   Serial.println("SET BAUD RATE.: AT$SB=N (3,12,24,48,96"); yield();
@@ -980,10 +977,6 @@ void command()
     }
     else if (upCmd.substring(3, 4) == "1") {
       verboseResults = 1;
-      sendResult(R_OK);
-    }
-    else if (upCmd.substring(3, 4) == "2") {
-      verboseResults = 2;
       sendResult(R_OK);
     }
     else {
