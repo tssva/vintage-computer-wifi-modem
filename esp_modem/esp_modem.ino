@@ -71,7 +71,7 @@ static unsigned char ascToPetTable[256] = {
 };
 
 #define VERSIONA 0
-#define VERSIONB 1
+#define VERSIONB 2
 #define VERSION_ADDRESS 0    // EEPROM address
 #define VERSION_LEN     2    // Length in bytesF
 #define SSID_ADDRESS    2
@@ -635,6 +635,24 @@ void setup() {
 
   EEPROM.begin(LAST_ADDRESS + 1);
   delay(10);
+
+  /*
+    If EEPROM version is 01 upgrade to version 02 which adds the quiet mode flag.
+    If verbose mode was previously 2 (silent) set quiet mode to on.
+    Otherwise set it to off.
+  */
+  if (EEPROM.read(VERSION_ADDRESS) == 0 && EEPROM.read(VERSION_ADDRESS + 1) == 1) {
+    EEPROM.write(QUIET_MODE_ADDRESS, 0x00);
+    if (EEPROM.read(VERBOSE_ADDRESS) == 2) {
+      EEPROM.write(VERBOSE_ADDRESS, 0x00);
+      EEPROM.write(QUIET_MODE_ADDRESS, 0x01);
+    }
+    else {
+      EEPROM.write(QUIET_MODE_ADDRESS, 0x00);
+    }
+    EEPROM.write(VERSION_ADDRESS, VERSIONA);
+    EEPROM.write(VERSION_ADDRESS + 1, VERSIONB);
+  }
 
   if (EEPROM.read(VERSION_ADDRESS) != VERSIONA || EEPROM.read(VERSION_ADDRESS + 1) != VERSIONB) {
     defaultEEPROM();
