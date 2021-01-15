@@ -92,6 +92,7 @@ static unsigned char ascToPetTable[256] = {
 #define PET_TRANSLATE_ADDRESS 118
 #define FLOW_CONTROL_ADDRESS 119
 #define PIN_POLARITY_ADDRESS 120
+#define QUIET_MODE_ADDRESS 121
 #define DIAL0_ADDRESS   200
 #define DIAL1_ADDRESS   250
 #define DIAL2_ADDRESS   300
@@ -113,7 +114,7 @@ static unsigned char ascToPetTable[256] = {
 #define CTS_PIN 5         // CTS Clear to Send, connect to host's RTS pin
 
 // Global variables
-String build = "12312020";
+String build = "01152021";
 String cmd = "";           // Gather a new AT command to this string from serial
 bool cmdMode = true;       // Are we in AT command mode or connected mode
 bool callConnected = false;// Are we currently in a call
@@ -153,6 +154,7 @@ byte flowControl = F_SOFTWARE;      // Use flow control
 bool txPaused = false;          // Has flow control asked us to pause?
 enum pinPolarity_t { P_INVERTED, P_NORMAL }; // Is LOW (0) or HIGH (1) active?
 byte pinPolarity = P_NORMAL;
+bool quietMode = false;
 
 // Telnet codes
 #define DO 0xfd
@@ -197,6 +199,7 @@ void writeSettings() {
   EEPROM.write(PET_TRANSLATE_ADDRESS, byte(petTranslate));
   EEPROM.write(FLOW_CONTROL_ADDRESS, byte(flowControl));
   EEPROM.write(PIN_POLARITY_ADDRESS, byte(pinPolarity));
+  EEPROM.write(QUIET_MODE_ADDRESS, byte(quietMode));
 
   for (int i = 0; i < 10; i++) {
     setEEPROM(speedDials[i], speedDialAddresses[i], 50);
@@ -218,6 +221,7 @@ void readSettings() {
   petTranslate = EEPROM.read(PET_TRANSLATE_ADDRESS);
   flowControl = EEPROM.read(FLOW_CONTROL_ADDRESS);
   pinPolarity = EEPROM.read(PIN_POLARITY_ADDRESS);
+  quietMode = EEPROM.read(QUIET_MODE_ADDRESS);
 
   for (int i = 0; i < 10; i++) {
     speedDials[i] = getEEPROM(speedDialAddresses[i], 50);
@@ -242,6 +246,7 @@ void defaultEEPROM() {
   EEPROM.write(PET_TRANSLATE_ADDRESS, 0x00);
   EEPROM.write(FLOW_CONTROL_ADDRESS, 0x02);
   EEPROM.write(PIN_POLARITY_ADDRESS, 0x01);
+  EEPROM.write(QUIET_MODE_ADDRESS, 0x00);
 
   setEEPROM("theoldnet.com:23", speedDialAddresses[0], 50);
   setEEPROM("bbs.retrocampus.com:23", speedDialAddresses[1], 50);
@@ -289,6 +294,9 @@ void setEEPROM(String inString, int startAddress, int maxLen) {
 
 void sendResult(int resultCode) {
   Serial.print("\r\n");
+  if (quietMode == 1) {
+    return;
+  }
   if (verboseResults == 0) {
     Serial.println(resultCode);
     return;
@@ -505,6 +513,7 @@ void displayCurrentSettings() {
   //Serial.print("SERVER TCP PORT: "); Serial.println(tcpServerPort); yield();
   Serial.print("BUSY MSG: "); Serial.println(busyMsg); yield();
   Serial.print("E"); Serial.print(echo); Serial.print(" "); yield();
+  Serial.print("Q"); Serial.print(quietMode); Serial.print(" "); yield();
   Serial.print("V"); Serial.print(verboseResults); Serial.print(" "); yield();
   Serial.print("&K"); Serial.print(flowControl); Serial.print(" "); yield();
   Serial.print("&P"); Serial.print(pinPolarity); Serial.print(" "); yield();
@@ -529,6 +538,7 @@ void displayStoredSettings() {
   //Serial.print("SERVER TCP PORT: "); Serial.println(word(EEPROM.read(SERVER_PORT_ADDRESS), EEPROM.read(SERVER_PORT_ADDRESS+1))); yield();
   Serial.print("BUSY MSG: "); Serial.println(getEEPROM(BUSY_MSG_ADDRESS, BUSY_MSG_LEN)); yield();
   Serial.print("E"); Serial.print(EEPROM.read(ECHO_ADDRESS)); Serial.print(" "); yield();
+  Serial.print("Q"); Serial.print(EEPROM.read(QUIET_MODE_ADDRESS)); Serial.print(" "); yield();
   Serial.print("V"); Serial.print(EEPROM.read(VERBOSE_ADDRESS)); Serial.print(" "); yield();
   Serial.print("&K"); Serial.print(EEPROM.read(FLOW_CONTROL_ADDRESS)); Serial.print(" "); yield();
   Serial.print("&P"); Serial.print(EEPROM.read(PIN_POLARITY_ADDRESS)); Serial.print(" "); yield();
@@ -578,12 +588,13 @@ void displayHelp() {
   Serial.println("FACT. DEFAULTS.......: AT&F"); yield();
   Serial.println("PIN POLARITY.........: AT&PN (N=0/INV,1/NORM)"); yield();
   Serial.println("ECHO OFF/ON..........: ATE0 / ATE1"); yield();
+  Serial.println("QUIET MODE OFF/ON....: ATQ0 / ATQ1"); yield();
   Serial.println("VERBOSE OFF/ON.......: ATV0 / ATV1"); yield();
   Serial.println("SET SSID......: AT$SSID=WIFISSID"); yield();
   Serial.println("SET PASSWORD..: AT$PASS=WIFIPASSWORD"); yield();
+  waitForSpace();
   Serial.println("SET BAUD RATE.: AT$SB=N (3,12,24,48,96"); yield();
   Serial.println("                192,384,576,1152)*100"); yield();
-  waitForSpace();
   Serial.println("FLOW CONTROL..: AT&KN (N=0/N,1/HW,2/SW)"); yield();
   Serial.println("WIFI OFF/ON...: ATC0 / ATC1"); yield();
   Serial.println("HANGUP........: ATH"); yield();
@@ -1197,7 +1208,7 @@ void command()
     sendResult(R_OK);
   }
 
-  /**** Display icoming TCP server port ****/
+  /**** Display incoming TCP server port ****/
   else if (upCmd == "AT$SP?") {
     sendString(String(tcpServerPort));
     sendResult(R_OK);
@@ -1263,6 +1274,25 @@ void command()
       tcpClient.print(request);
     }
     delete hostChr;
+  }
+
+  /**** Control quiet mode ****/
+  else if (upCmd.indexOf("ATQ") == 0) {
+    if (upCmd.substring(3, 4) == "?") {
+      sendString(String(quietMode));
+      sendResult(R_OK);
+    }
+    else if (upCmd.substring(3, 4) == "0") {
+      quietMode = 0;
+      sendResult(R_OK);
+    }
+    else if (upCmd.substring(3, 4) == "1") {
+      quietMode = 1;
+      sendResult(R_OK);
+    }
+    else {
+      sendResult(R_ERROR);
+    }
   }
 
   /**** Unknown command ****/
